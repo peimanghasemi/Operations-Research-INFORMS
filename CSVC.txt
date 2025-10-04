@@ -1,0 +1,58 @@
+* /// A Limited Data-Driven Robust Optimization Approach for the Team Orienteering Problem in Emergency Logistics ///
+* /// Conservative Support Vector Clustering ///
+sets
+i 'Index of Hospitals' /H1*H23/
+jp 'Index of sample data' /1*4/
+alias(i,j)
+alias(jp,jz);
+
+parameters
+alphac /0.4/
+omega(j)
+Parbeta(j,jp)
+wh(j)  /
+$call=xls2gms r=S2:T24 i=demand.xls o=wh.inc
+$include wh.inc
+/
+table mio(j,jp)
+$call=xls2gms r=B1:F24 i=demand.xls o=parmio.inc
+$include parmio.inc
+;
+table kernel(j,jp,jz) 'The kernel function'
+$call=xls2gms r=C27:G119 i=demand.xls o=parkernel.inc
+$include parkernel.inc
+;
+table dalpha(j,jp) 'The radius of the hypersphere '
+$call=xls2gms r=N1:R24 i=demand.xls o=pardalpha.inc
+$include pardalpha.inc
+;
+
+variables
+zqp
+positive variable beta;
+
+parameters
+Pkernel(jp,jz)
+Pdalpha(jp);
+
+equations
+objQP
+co1QP;
+
+objQP    .. zqp =l= sum((jp,jz)$(ord(jp)=ord(jz)),beta(jp)*Pkernel(jp,jz)) - sum((jp,jz) $(ord(jp) ne ord(jz)),beta(jp)*beta(jz)*Pkernel(jp,jz))+ sum(jp, Pdalpha(jp)*alphac*beta(jp));
+co1QP    .. sum(jp,beta(jp)) =e= 1;
+
+model Quadraticproblem /All/;
+option QCP = baron, optca = 0, optcr = 0, reslim = 10000000000000;
+loop(j,
+Pkernel(jp,jz) = kernel(j,jp,jz);
+Pdalpha(jp) = dalpha(j,jp);
+solve Quadraticproblem using QCP max zqp;
+Parbeta(j,jp)= beta.l(jp);
+
+omega(j) = smin(jz $(Parbeta(j,jz) > 0), ((dalpha(j,jz)*alphac)/2) + sum(jp $(Parbeta(j,jp) > 0), abs(wh(j)*(mio(j,jz)-mio(j,jp)))*Parbeta(j,jp)));
+
+);
+display Parbeta,omega;
+
+

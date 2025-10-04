@@ -1,0 +1,256 @@
+* /// A Limited Data-Driven Robust Optimization Approach for the Team Orienteering Problem in Emergency Logistics ///
+* /// Data-Driven Rubost Optimization ///
+sets
+i 'Index of Hospitals' /H1*H23/
+k 'Index of candidate facilities' /F1*F9/
+t 'Index of ambulance and drone' /1*2/
+jp 'Index of sample data' /1*4/
+alias(i,j)
+alias(jp,jz);
+
+parameters
+ppi
+pppi(j)
+M 'A large positive number (Big-M)' /10000000/
+c /3000/
+capd 'Capacity of drones' /40/
+capt 'Capacity of ambulance' /2500/
+time 'Working time of a day ' /480/
+toa 'The drones battery operation time' /43/
+phi 'The drones service time for each customer(landing, delivering goods, and taking off)' /2/
+gap
+R(j)
+Parbeta(j,jp)
+omega(j) / H1   92.450,    H2   92.450,    H3   92.450,    H4   22.050,    H5   92.450
+ H6   92.450,    H7   92.450,    H8   92.450,    H9   92.450,    H10  92.450
+ H11  92.450,    H12  92.450,    H13  92.450,    H14  92.450,    H15  92.450
+ H16  96.800,    H17  92.450,    H18  92.450,    H19  96.800,    H20  92.450
+ H21  92.450,    H22  92.450,    H23 162.450/
+
+f(k) /F1*F9 15000/
+teta(i) 'The trucks service time for customer j' /H1*H23 5/
+wh(j)  /
+$call=xls2gms r=S2:T24 i=demand.xls o=wh.inc
+$include wh.inc
+/
+ave(j)  /
+$call=xls2gms r=A3:B25 i=avedemand.xls o=ave.inc
+$include ave.inc
+/;
+table mio(j,jp)
+$call=xls2gms r=B1:F24 i=demand.xls o=parmio.inc
+$include parmio.inc
+;
+table tt(i,j) 'The ambulance travel time between nodes i,j(Hospitals)'
+$call=xls2gms r=a2:x25 i=tt.xls o=partt.inc
+$include partt.inc
+;
+table td(i,j) 'The drone travel time between nodes i,j(Hospitals)'
+$call=xls2gms r=a2:x25 i=td.xls o=partd.inc
+$include partd.inc
+;
+table td0(k,i)'The drone travel time between nodes k,i(facility to Hospital)'
+$call=xls2gms r=a2:x11 i=td0.xls o=partd0.inc
+$include partd0.inc
+;
+table tts(k,i)'The ambulance travel time between nodes k,i(facility to Hospital)'
+$call=xls2gms r=a2:x11 i=tts.xls o=partts.inc
+$include partts.inc
+;
+table ttf(i,k)'The ambulance travel time between nodes i,k(Hospital to facility)'
+$call=xls2gms r=a2:j25 i=ttf.xls o=parttf.inc
+$include parttf.inc
+;
+R(j) = 0.1*ave(j);
+table Parbeta(j,jp)
+
+           3
+ H1        1.000
+ H2        1.000
+ H3        1.000
+ H4        1.000
+ H5        1.000
+ H6        1.000
+ H7        1.000
+ H8        1.000
+ H9        1.000
+ H10       1.000
+ H11       1.000
+ H12       1.000
+ H13       1.000
+ H14       1.000
+ H15       1.000
+ H16       1.000
+ H17       1.000
+ H18       1.000
+ H19       1.000
+ H20       1.000
+ H21       1.000
+ H22       1.000
+ H23       1.000;
+
+variables
+z1
+z2
+Tl
+positive variable gp
+binary variable x
+binary variable y
+binary variable u
+binary variable l
+binary variable vartheta
+positive variable AT
+positive variable Q
+positive variable w
+positive variable pi
+positive variable gamma
+positive variable psi
+positive variable lambda;
+l.fx(i,i,k,t)=0;
+u.fx(i,i,k,t)=0;
+l.fx('0(s)','0(f)',k,t)=0;
+l.fx(i,'0(s)',k,t)=0;
+l.fx('0(s)','0(s)',k,t)=0;
+l.fx('0(f)','0(f)',k,t)=0;
+l.fx('0(f)',i,k,t)=0;
+u.fx(i,'0(s)',k,t)=0;
+u.fx('0(f)',i,k,t)=0;
+u.fx('0(s)','0(f)',k,t)=0;
+u.fx('0(f)','0(f)',k,t)=0;
+u.fx('0(s)','0(s)',k,t)=0;
+x.fx('0(f)',k,t)=0;
+y.fx('0(s)',k,t)=0;
+AT.fx('0(s)',k,t)=0;
+z1.lo = 35000;
+equations
+obj1        'Minimizing the maximum arrival time at facility locations'
+obj2        'minimizing the total cost'
+obj3(k,t)
+co1(j)
+co2(i)
+co3a(j,k,t)
+co3b(k,t)
+co3c(j,k,t)
+co3d(k,t)
+co4a(i,k,t)
+co4b(k,t)
+co4c(i,k,t)
+co4d(k,t)
+co5(i,k,t)
+co6(i,k,t)
+co7(k,t)
+co8(k,t)
+co9(i,k,t)
+co10a(i,j,k,t)
+co10b(i,k,t)
+co10c(j,k,t)
+co11a(i,j,k,t)
+co11b(j,k,t)
+co11c(i,k,t)
+co12(i,k,t)
+co13(k,t)
+co14(k,t)
+co15(k,t)
+co16(k,t)
+co16a(k,t)
+co17a(i,j,k,t)
+co17b(j,k,t)
+co17c(i,k,t)
+co18a(k,t)
+co18b(i,k,t)
+co20(i,j,k,t)
+co21(i,j,k,t)
+co22a(k,t)
+co22b(i,k,t)
+co25(k)
+co26(k)
+co27a(j)
+co27b(j)
+co27c(j,jp)
+co27d(j,jp)
+co28(j,k,t)
+co29(j,k,t)
+co30(j,k,t)
+co31(j,k,t)
+co32(k,t)
+co33(k,t);
+
+obj1           .. z1 =e= sum(j, R(j)*pi(j));
+obj2           .. z2 =e= sum(k,f(k)*vartheta(k)) + sum((k,t), c*(sum(j, l('0(s)',j,k,t))+sum(j, u('0(s)',j,k,t))));
+obj3(k,t)      .. Tl =g= At('0(f)',k,t);
+co1(j)         .. sum((k,t), u('0(s)',j,k,t) + sum(i,u(i,j,k,t))) + sum((k,t), l('0(s)',j,k,t) + sum(i,l(i,j,k,t))) =l= 1 + sum((k,t),y(j,k,t));
+co2(i)         .. sum((k,t), u(i,'0(f)',k,t) + sum(j,u(i,j,k,t))) + sum((k,t), l(i,'0(f)',k,t) + sum(j,l(i,j,k,t))) =l= 1 + sum((k,t),x(i,k,t));
+co3a(j,k,t)    .. 2*y(j,k,t) =l= u('0(s)',j,k,t) + sum(i,u(i,j,k,t)) + l('0(s)',j,k,t) + sum(i,l(i,j,k,t));
+co3b(k,t)      .. 2*y('0(f)',k,t) =l= sum(i,u(i,'0(f)',k,t)) + sum(i,l(i,'0(f)',k,t));
+co3c(j,k,t)    .. u('0(s)',j,k,t) + sum(i,u(i,j,k,t)) + l('0(s)',j,k,t) + sum(i,l(i,j,k,t)) =l= 1 + y(j,k,t);
+co3d(k,t)      .. sum(i,u(i,'0(f)',k,t)) + sum(i,l(i,'0(f)',k,t)) =l= 1 + y('0(f)',k,t);
+co4a(i,k,t)    .. 2*x(i,k,t) =l= u(i,'0(f)',k,t) + sum(j,u(i,j,k,t)) + l(i,'0(f)',k,t) + sum(j,l(i,j,k,t));
+co4b(k,t)      .. 2*x('0(s)',k,t) =l= sum(j,u('0(s)',j,k,t)) + sum(j,l('0(s)',j,k,t));
+co4c(i,k,t)    .. u(i,'0(f)',k,t) + sum(j,u(i,j,k,t)) + l(i,'0(f)',k,t) + sum(j,l(i,j,k,t)) =l= 1 + x(i,k,t);
+co4d(k,t)      .. sum(j,u('0(s)',j,k,t)) + sum(j,l('0(s)',j,k,t)) =l= 1 + x('0(s)',k,t);
+co5(i,k,t)     .. l('0(s)',i,k,t) + sum(j,l(j,i,k,t)) =e= l(i,'0(f)',k,t) + sum(j,l(i,j,k,t));
+co6(i,k,t)     .. u('0(s)',i,k,t) + sum(j, u(j,i,k,t)) - u(i,'0(f)',k,t) - sum(j, u(i,j,k,t)) =e= y(i,k,t) - x(i,k,t);
+co7(k,t)       .. y('0(f)',k,t) + sum(j, y(j,k,t)) =l= 1;
+co8(k,t)       .. x('0(s)',k,t) + sum(i, x(i,k,t)) =e= y('0(f)',k,t) + sum(j, y(j,k,t));
+co9(i,k,t)     .. x(i,k,t) + y(i,k,t) =l= 1;
+co10a(i,j,k,t)$(ord(i) ne ord(j))   .. AT(i,k,t) - AT(j,k,t) + u(i,j,k,t)*(td(i,j)+phi) =l= time*(1-u(i,j,k,t));
+co10b(i,k,t)   .. AT(i,k,t) - AT('0(f)',k,t) + u(i,'0(f)',k,t)*(td0(k,i)+phi) =l= time*(1-u(i,'0(f)',k,t));
+co10c(j,k,t)   .. AT('0(s)',k,t) - AT(j,k,t) + u('0(s)',j,k,t)*td0(k,j) =l= time*(1-u('0(s)',j,k,t));
+co11a(i,j,k,t)$(ord(i) ne ord(j))   .. AT(i,k,t) - AT(j,k,t) + l(i,j,k,t)*(tt(i,j) + teta(i)) =l= time*(1-l(i,j,k,t));
+co11b(j,k,t)   .. AT('0(s)',k,t) - AT(j,k,t) + l('0(s)',j,k,t)*tts(k,j) =l= time*(1-l('0(s)',j,k,t));
+co11c(i,k,t)   .. AT(i,k,t) - AT('0(f)',k,t) + l(i,'0(f)',k,t)*(ttf(i,k)+teta(i)) =l= time*(1-l(i,'0(f)',k,t));
+co12(i,k,t)    .. AT(i,k,t) =l= AT('0(f)',k,t);
+co13(k,t)      .. AT('0(f)',k,t) =l= time;
+co14(k,t)      .. sum(j,u('0(s)',j,k,t)*td0(k,j)) + sum((i,j),u(i,j,k,t)*(td(i,j) + phi)) + sum(i,u(i,'0(f)',k,t)*(td0(k,i) + phi)) =l=  toa;
+co15(k,t)      .. sum(j,Q(j,k,t)) =l= capd;
+co16(k,t)      .. sum(j,w(j,k,t)) =l= capt;
+co16a(k,t)     .. sum(j,Q(j,k,t)+w(j,k,t)) =l= capt + x('0(s)',k,t)*capd;
+co17a(i,j,k,t) .. l(i,j,k,t)+ u(i,j,k,t) =l= 1;
+co17b(j,k,t)   .. l('0(s)',j,k,t)+ u('0(s)',j,k,t) =l= 1;
+co17c(i,k,t)   .. l(i,'0(f)',k,t)+ u(i,'0(f)',k,t) =l= 1;
+co18a(k,t)     .. sum(j,l('0(s)',j,k,t)) =l= 1;
+co18b(i,k,t)   .. sum(j,l(i,j,k,t))+ l(i,'0(f)',k,t) =l= 1;
+co20(i,j,k,t)  .. l(i,j,k,t) + l(j,i,k,t) =l= 1;
+co21(i,j,k,t)  .. u(i,j,k,t) + u(j,i,k,t) =l= 1;
+co22a(k,t)     .. sum(j,u('0(s)',j,k,t)) =l= 1;
+co22b(i,k,t)   .. sum(j,u(i,j,k,t))+u(i,'0(f)',k,t) =l= 1;
+co25(k)        .. vartheta(k) =l= sum((i,t),l('0(s)',i,k,t)) + sum((i,t),u('0(s)',i,k,t));
+co26(k)        .. sum((i,t),l('0(s)',i,k,t)) + sum((i,t),u('0(s)',i,k,t)) =l= M*vartheta(k);
+co27a(j)       .. sum(jp $(Parbeta(j,jp)>0), gp(jp,j)*wh(j)*mio(j,jp))+lambda(j)*omega(j)- sum((k,t),Q(j,k,t)+w(j,k,t)) =e= pi(j);
+co27b(j)       .. sum(jp $(Parbeta(j,jp)>0), -wh(j)*gp(jp,j))+1 =e= 0;
+co27c(j,jp)$(Parbeta(j,jp)>0)     .. gamma(j,jp) + psi(j,jp) =e= lambda(j)*Parbeta(j,jp);
+co27d(j,jp)    .. gamma(j,jp) - psi(j,jp) =e= gp(jp,j);
+co28(j,k,t)    .. w(j,k,t) =l= M*(l('0(s)',j,k,t) + sum(i,l(i,j,k,t)));
+co29(j,k,t)    .. l('0(s)',j,k,t) + sum(i,l(i,j,k,t)) =l= w(j,k,t);
+co30(j,k,t)    .. Q(j,k,t) =l= M*(u('0(s)',j,k,t) + sum(i,u(i,j,k,t)));
+co31(j,k,t)    .. u('0(s)',j,k,t) + sum(i,u(i,j,k,t)) =l= Q(j,k,t);
+co32(k,t)      .. tl =g= sum(j,l('0(s)',j,k,t)*tts(k,j)) + sum((i,j), l(i,j,k,t)*(tt(i,j)+teta(i))) + sum(j,l(j,'0(f)',k,t)*(ttf(j,k)+teta(j)));
+co33(k,t)      .. tl =g= sum(j,u('0(s)',j,k,t)*td0(k,j)) + sum((i,j), u(i,j,k,t)*(td(i,j)+phi)) + sum(j,u(j,'0(f)',k,t)*(td0(k,j)+phi));
+
+
+*equations
+*co34
+*co35;
+
+*co34      .. z1 =l= 0;
+*co35      .. z2 =l= 189000;
+
+model orginalProblem3 /All/;
+option mip = gurobi, optca = 0, optcr = 0, reslim = 10000000000000;
+orginalProblem3.optfile = 1;
+$onEcho > gurobi.opt
+MIPFocus 1
+NodeMethod 1
+RINS 10
+Cuts 3
+Presolve 2
+$offEcho
+
+
+
+solve orginalProblem3 using mip min z1;
+pppi(j)=sum(jp $(Parbeta(j,jp)>0), gp.l(jp,j)*wh(j)*mio(j,jp))+lambda.l(j)*omega(j);
+ppi= sum(j,pi.l(j));
+display z1.l,z2.l,x.l,y.l,l.l,u.l, AT.l, vartheta.l, pi.l,ppi,pppi, gp.l,Q.l, W.l,gamma.l,psi.l,lambda.l;
+
+

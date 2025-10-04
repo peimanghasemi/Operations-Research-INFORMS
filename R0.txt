@@ -1,0 +1,34 @@
+* /// A Limited Data-Driven Robust Optimization Approach for the Team Orienteering Problem in Emergency Logistics ///
+* /// Conservative Support Vector Clustering ///
+sets
+j 'Index of Hospitals' /H1*H23/
+jp 'Index of sample data' /1*4/;
+
+parameters
+Pmio(jp)
+PR(j)
+Pc(j)
+table mio(j,jp)
+$call=xls2gms r=B1:F24 i=demand.xls o=parmio.inc
+$include parmio.inc
+;
+
+variables
+zr
+positive variable c;
+
+equations
+co1r(jp);
+co1r(jp)    .. zr =g= power((Pmio(jp) - c),2);
+
+model Quadraticproblem /All/;
+option QCP = baron, optca = 0, optcr = 0, reslim = 10000000000000;
+loop(j,
+Pmio(jp) = mio(j,jp);
+solve Quadraticproblem using QCP min zr;
+PR(j)= zr.l**0.5;
+Pc(j)= c.l;
+);
+display PR,Pc;
+
+
