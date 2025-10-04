@@ -16,7 +16,7 @@ The model coordinates **drones and ambulances** to improve supply chain resilien
 
 ##  Project Structure
 - `model.gms` → main GAMS model.  
-- `data.xlsx` → input data file (demand, locations, parameters).  
+- `data.xls` → input data file (demand, locations, parameters).  
 - `results/` → output folder for solutions and reports.  
 
 ---
@@ -33,6 +33,6 @@ The model coordinates **drones and ambulances** to improve supply chain resilien
 2. To run the model, you can either:
    - Rename `Deterministic.txt` to `Deterministic.gms` and open it in GAMS, or  
    - Open `Deterministic.txt` directly in GAMS IDE and run it.  
-3. The model will read the required data from `data.xlsx` (or other input files).  
+3. The model will read the required data from `data.xls` (or other input files).  
 4. Results will be generated and saved in the `results/` folder.  
 
